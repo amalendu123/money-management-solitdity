@@ -10,13 +10,8 @@ export default function Home() {
   const [amount, setAmount] = useState("");
   const [total, setTotal] = useState();
 
-  const contractAddress = "0xd2a5bC10698FD955D1Fe6cb468a17809A08fd005";
+  const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
   const contractABI = [
-    {
-      "inputs": [],
-      "stateMutability": "nonpayable",
-      "type": "constructor"
-    },
     {
       "inputs": [
         {
@@ -91,25 +86,16 @@ export default function Home() {
   }
 
   try {
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const provider = new ethers.BrowserProvider(window.ethereum);
     const signer = provider.getSigner();
     const contract = new ethers.Contract(contractAddress, contractABI, signer);
 
-    // Check if the contract is deployed and the ABI is correct
+    
     const contractCode = await provider.getCode(contractAddress);
-    if (contractCode === "0x") {
-      console.error("Contract not deployed at the specified address.");
-      return;
-    }
-
-    let totalAmount;
+    console.log("Contract code at address:", contractCode);
     try {
-      totalAmount = await Promise.race([
-        contract.getMoney(),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Timeout')), 5000)
-        ),
-      ]);
+     
+      const totalAmount = await contract.getMoney();
       console.log("Current total amount:", totalAmount.toString());
     } catch (error) {
       console.error("Error getting total amount:", error);
@@ -126,17 +112,20 @@ export default function Home() {
 
   useEffect(() => {
     async function getTotalAmount() {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const contract = new ethers.Contract(contractAddress, contractABI, provider);
-      const totalAmount = await contract.getMoney();
-      console.log(totalAmount);
-      setTotal(totalAmount);
-    }
+      try {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+          const contract = new ethers.Contract(contractAddress, contractABI, provider);
+          const totalAmount = await contract.getMoney();
+          console.log(totalAmount);
+          setTotal(totalAmount);
+      } catch (error) {
+          console.error("Error fetching total amount:", error);
+      }
+  }
     if (wallet) {
       getTotalAmount();
     }
   }, [wallet]);
-
   return (
     <>
       {wallet ? (
